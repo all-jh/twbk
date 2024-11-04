@@ -634,3 +634,177 @@ body {
 .post-header h3 {
     margin: 0;
 }
+
+.preview-canvas {
+    width: 100%;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* 移動端響應式設計 */
+@media screen and (max-width: 768px) {
+    /* 基礎佈局調整 */
+    .content {
+        padding: 15px;
+        margin-top: 70px;  /* 為固定的開啟按鈕留出空間 */
+    }
+
+    /* 側邊欄調整 */
+    .sidebar {
+        width: 100%;
+        right: -100%;
+        padding-top: 40px;
+    }
+
+    .sidebar a {
+        padding: 15px 20px;
+        font-size: 16px;
+        margin: 5px 10px;
+    }
+
+    .openbtn {
+        padding: 10px 20px;
+        font-size: 18px;
+        top: 15px;
+        right: 15px;
+    }
+
+    /* 用戶卡片調整 */
+    .user-card {
+        padding: 30px 20px;
+        margin-bottom: 30px;
+    }
+
+    .user-card h2 {
+        font-size: 1.8em;
+        margin-bottom: 25px;
+    }
+
+    .user-avatar {
+        width: 120px;
+        height: 120px;
+        font-size: 2.8em;
+        margin-bottom: 25px;
+        border-width: 4px;
+    }
+
+    /* 功能卡片調整 */
+    .feature-cards {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .feature-card {
+        padding: 25px;
+    }
+
+    .feature-card i {
+        font-size: 2.8em;
+        margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+    }
+
+    /* 貼文卡片調整 */
+    .post-card {
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left-width: 4px;
+    }
+
+    .post-card h3 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+
+    .post-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding-bottom: 12px;
+        margin-bottom: 15px;
+    }
+
+    .post-status {
+        margin-left: 0;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    /* 按鈕調整 */
+    .approve-btn, .reject-btn, .download-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        margin-top: 15px;
+        width: 100%;  /* 讓按鈕佔滿整行 */
+        margin: 5px 0;
+    }
+
+    .post-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* 模態框調整 */
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 20px;
+    }
+
+    .close {
+        font-size: 28px;
+    }
+
+    /* 提示框調整 */
+    .notification {
+        width: 90%;
+        padding: 15px 20px;
+        font-size: 14px;
+        bottom: 20px;
+    }
+
+    /* 媒體內容調整 */
+    .post-media {
+        max-height: 200px;
+        width: 100%;
+        object-fit: contain;
+    }
+
+    /* 預覽畫布調整 */
+    .preview-canvas {
+        margin: 8px 0;
+    }
+}
+
+/* 針對更小螢幕的額外調整 */
+@media screen and (max-width: 480px) {
+    .user-card h2 {
+        font-size: 1.5em;
+    }
+
+    .user-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2.4em;
+    }
+
+    .feature-card {
+        padding: 20px;
+    }
+
+    .post-card {
+        padding: 15px;
+    }
+
+    .notification {
+        font-size: 13px;
+        padding: 12px 18px;
+    }
+}

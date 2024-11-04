@@ -83,6 +83,7 @@ const firebaseConfig = {
                                         return `<img src="${url.url}" alt="留言GIF" class="post-media">`;
                                     }
                                 }).join('') : ''}
+                                <canvas class="preview-canvas" style="width: 100%; margin: 10px 0;"></canvas>
                                 <div class="post-actions">
                                     <button class="approve-btn" onclick="approvePost('${doc.id}', this)">批准</button>
                                     <button class="reject-btn" onclick="rejectPost('${doc.id}', this)">不批准</button>
@@ -90,6 +91,7 @@ const firebaseConfig = {
                                 </div>
                             `;
                             postsContainer.appendChild(postElement);
+                            generatePreview(postElement, postData);
                         }
                     });
                 }
@@ -139,11 +141,13 @@ const firebaseConfig = {
                                     return `<img src="${url.url}" alt="留言GIF" class="post-media">`;
                                 }
                             }).join('') : ''}
+                            <canvas class="preview-canvas" style="width: 100%; margin: 10px 0;"></canvas>
                             <div class="post-actions">
                                 <button class="download-btn" onclick="downloadPostAsImage(this)">下載圖片</button>
                             </div>
                         `;
                         postsContainer.appendChild(postElement);
+                        generatePreview(postElement, postData);
                     });
                 }
             } catch (error) {
@@ -234,11 +238,13 @@ const firebaseConfig = {
                                     return `<img src="${url.url}" alt="留言GIF" class="post-media">`;
                                 }
                             }).join('') : ''}
+                            <canvas class="preview-canvas" style="width: 100%; margin: 10px 0;"></canvas>
                             <div class="post-actions">
                                 <input type="checkbox" class="delete-checkbox"> 選擇刪除
                             </div>
                         `;
                         deletePostsContainer.appendChild(postElement);
+                        generatePreview(postElement, postData);
                     });
                 }
             } catch (error) {
@@ -452,6 +458,7 @@ const firebaseConfig = {
                             </div>
                         `;
                         postsContainer.appendChild(postElement);
+                        generatePreview(postElement, postData);
                     });
                 }
             } catch (error) {
@@ -510,10 +517,17 @@ const firebaseConfig = {
             
             // 載入背景圖片
             const backgroundImage = new Image();
-            backgroundImage.src = '慈文.png';
-            await new Promise((resolve) => {
+            backgroundImage.crossOrigin = "anonymous";
+            backgroundImage.src = './慈文.png';
+            
+            await new Promise((resolve, reject) => {
                 backgroundImage.onload = resolve;
+                backgroundImage.onerror = () => {
+                    console.error('背景圖片載入失敗，路徑:', backgroundImage.src);
+                    reject(new Error('背景圖片載入失敗'));
+                };
             });
+            
             ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
             
             // 設置文字樣式
@@ -576,6 +590,18 @@ const firebaseConfig = {
                 const currentY = startY + index * lineHeight;
                 ctx.fillText(line, x, currentY);
             });
+
+            // 添加時間戳記到右下角
+            const timeElement = postCard.querySelector('.post-info p strong');
+            let createdAt = '';
+            if (timeElement && timeElement.textContent === '時間:') {
+                createdAt = timeElement.nextSibling.textContent.trim();
+            }
+            // 繪製時間 - 改為右下角
+            ctx.font = 'bold 20px Arial, "Noto Sans TC", sans-serif';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'right';
+            ctx.fillText(createdAt, canvas.width - 20, canvas.height - 30);
             
             // 將 canvas 轉換為圖片並下載
             canvas.toBlob(async blob => {
@@ -596,7 +622,133 @@ const firebaseConfig = {
         function getFileExtension(url) {
             return url.split('.').pop().split(/\#|\?/)[0];
         }
+        async function generatePreview(postElement, postData) {
+            const canvas = postElement.querySelector('.preview-canvas');
+            if (!canvas) {
+                console.error('找不到 canvas 元素');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // 設置 canvas 尺寸
+            canvas.width = 800;
+            canvas.height = 600;
+            
+            try {
+                // 載入背景圖片 - 修正圖片名稱
+                const backgroundImage = new Image();
+                backgroundImage.crossOrigin = "anonymous";
+                backgroundImage.src = './慈文.png'; // 修改這裡的圖片名稱
+                
+                await new Promise((resolve, reject) => {
+                    backgroundImage.onload = resolve;
+                    backgroundImage.onerror = (error) => {
+                        console.error('背景圖片載入失敗，路徑:', backgroundImage.src, error);
+                        reject(new Error('背景圖片載入失敗'));
+                    };
+                });
+                
+                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+                
+                // 設置文字樣式
+                ctx.font = 'bold 28px Arial, "Noto Sans TC", sans-serif';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // 獲取內容和時間
+                const content = postData.content || '';
+                let postTime = '未知時間';
+                
+                // 安全地處理時間戳
+                if (postData.createdAt) {
+                    try {
+                        if (postData.createdAt.toDate) {
+                            // Firestore Timestamp
+                            const timestamp = postData.createdAt.toDate();
+                            postTime = timestamp.toLocaleString('zh-TW', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        } else if (postData.createdAt instanceof Date) {
+                            // JavaScript Date 對象
+                            postTime = postData.createdAt.toLocaleString('zh-TW', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('時間格式化失敗:', error);
+                    }
+                }
+                
+                // 文字換行處理
+                const maxWidth = 700;
+                const lineHeight = 40;
+                let x = canvas.width / 2;
+                
+                // 根據字數動態調整字體大小
+                let fontSize = 28;
+                if (content.length < 20) {
+                    fontSize = 48;
+                } else if (content.length < 50) {
+                    fontSize = 36;
+                }
+                ctx.font = `bold ${fontSize}px Arial, "Noto Sans TC", sans-serif`;
+                
+                // 文字換行處理
+                let lines = [];
+                let words = content.split('');
+                let currentLine = '';
+                
+                for (let i = 0; i < words.length; i++) {
+                    let testLine = currentLine + words[i];
+                    let metrics = ctx.measureText(testLine);
+                    let testWidth = metrics.width;
+                    
+                    if (testWidth > maxWidth && i > 0) {
+                        lines.push(currentLine);
+                        currentLine = words[i];
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                lines.push(currentLine);
+                
+                // 計算總高度並調整起始位置
+                const totalHeight = lines.length * lineHeight;
+                const topMargin = 100;
+                const bottomMargin = 150;
+                let startY = Math.max(topMargin, (canvas.height - totalHeight) / 2);
+                
+                if (startY + totalHeight > canvas.height - bottomMargin) {
+                    startY = canvas.height - bottomMargin - totalHeight;
+                }
+                
+                // 繪製文字
+                lines.forEach((line, index) => {
+                    const currentY = startY + index * lineHeight;
+                    ctx.fillText(line, x, currentY);
+                });
 
-
-
-
+                // 繪製時間 - 改為右下角
+                ctx.font = 'bold 20px Arial, "Noto Sans TC", sans-serif';
+                ctx.fillStyle = '#000000';
+                ctx.textAlign = 'right';
+                ctx.fillText(postTime, canvas.width - 20, canvas.height - 20);
+                
+            } catch (error) {
+                console.error('生成預覽圖時出錯:', error);
+                // 在 canvas 上顯示錯誤信息
+                ctx.fillStyle = '#ff0000';
+                ctx.textAlign = 'center';
+                ctx.fillText('預覽圖生成失敗', canvas.width / 2, canvas.height / 2);
+            }
+        }
